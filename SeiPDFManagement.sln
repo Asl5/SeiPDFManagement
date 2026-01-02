@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36511.14 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SeiPDFManagement", "SeiPDFManagement.csproj", "{24D16A9B-5352-47A8-BDAC-27858AB31E01}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{24D16A9B-5352-47A8-BDAC-27858AB31E01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24D16A9B-5352-47A8-BDAC-27858AB31E01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24D16A9B-5352-47A8-BDAC-27858AB31E01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24D16A9B-5352-47A8-BDAC-27858AB31E01}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C2F96208-3D50-4020-A894-C7CAB4D7B790}
+	EndGlobalSection
+EndGlobal

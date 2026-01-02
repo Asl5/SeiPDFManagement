@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+	<PropertyGroup>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);1591</NoWarn>
+	</PropertyGroup>
+
+
+	<ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="MailKit" Version="4.14.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.78.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Oracle.EntityFrameworkCore" Version="9.23.26000" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
+  </ItemGroup>
+
+</Project>
