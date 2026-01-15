@@ -7,6 +7,7 @@ using SeiPDFManagement.Services;
 using SeiPDFManagement.Services.Context;
 using SeiPDFManagement.Services.MailProcessing;
 using SeiPDFManagement.Services.SeiPdfExport;
+using SeiPDFManagement.Services.SeiPdfZip;
 using Serilog;
 using System.Reflection;
 
@@ -59,6 +60,11 @@ builder.Services.Configure<SeiPdfExportSettings>(builder.Configuration.GetSectio
 
 builder.Services.AddScoped<ISeiPdfExportRepository, SeiPdfExportRepository>();
 builder.Services.AddScoped<ISeiPdfExportService, SeiPdfExportService>();
+builder.Services.Configure<SeiPdfZipSettings>(builder.Configuration.GetSection("SeiPdfZipSettings"));
+
+builder.Services.AddScoped<ISeiPdfZipRepository, SeiPdfZipRepository>();
+builder.Services.AddScoped<ISeiPdfZipService, SeiPdfZipService>();
+
 builder.Services.AddDbContext<AuthorizationDbContext>(options =>
 {
     options.UseOracle(
@@ -84,14 +90,6 @@ app.UseRouting();
 app.UseAuthentication(); // ← anche se ora non l’hai ancora messa, va qui
 app.UseAuthorization();
 
-app.UseSwagger();
-
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SeiPDF Management API v1");
-    c.RoutePrefix = "swagger"; // https://host/swagger
-});
-
 app.UseWhen(
     ctx => ctx.Request.Path.StartsWithSegments("/swagger"),
     swaggerApp =>
@@ -116,6 +114,14 @@ app.UseWhen(
             await next();
         });
     });
+
+app.UseSwagger();
+
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SeiPDF Management API v1");
+    c.RoutePrefix = "swagger"; // https://host/swagger
+});
 
 app.MapControllerRoute(
     name: "default",

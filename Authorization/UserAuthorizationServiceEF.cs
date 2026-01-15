@@ -22,12 +22,14 @@ namespace SeiPDFManagement.Authorization
 
             var now = DateTime.Now;
 
-            var abilitato = await _db.UtentiMonitoraggio
-                .AsNoTracking()
-                .AnyAsync(u =>
-                    u.Username == username &&
-                    (u.DataInizio == null || u.DataInizio <= now) &&
-                    (u.DataFine == null || u.DataFine >= now));
+            var utenti = await _db.UtentiMonitoraggio
+                .Where(u => u.Username == username)
+                .ToListAsync();   // ← MATERIALIZZI
+
+            var abilitato = utenti.Any(u =>
+                (u.DataInizio == null || u.DataInizio <= now) &&
+                (u.DataFine == null || u.DataFine >= now)
+            );
 
             if (!abilitato)
                 _logger.LogWarning("Utente {User} NON autorizzato", username);

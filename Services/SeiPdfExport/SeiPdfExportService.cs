@@ -118,7 +118,7 @@ namespace SeiPDFManagement.Services.SeiPdfExport
                     // Il valore "nomeBase" è lo stesso naming usato nel canale Mirth
                     // (attenzione: qui senza estensione).
                     await _repo.InsertH2HLogSeiPdfAsync(nomeBase, "File generato", ".pdf", ct);
-                    await _repo.InsertH2HSeiPdfLogAsync(nomeBase, ".pdf", 1, ct);
+                    await _repo.InsertH2HSeiPdfLogAsync(nomeBase, elaborazione, ".pdf", 1, ct);
                 }
                 catch (Exception ex)
                 {

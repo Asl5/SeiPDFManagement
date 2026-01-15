@@ -203,15 +203,16 @@ namespace SeiPDFManagement.Repositories
         /// </summary>
         public async Task InsertH2HSeiPdfLogAsync(
             string nomeFile,
+            string elaborazione,
             string tipoFile,
             int creato,
             CancellationToken ct)
         {
             const string sql = """
                 INSERT INTO H2H_SEIPDF_LOG
-                    (NOME_FILE, TIPO_FILE, CREATO, DATA_CREAZIONE)
+                    (NOME_FILE, TIPO_FILE, CREATO, DATA_CREAZIONE, ELABORAZIONE)
                 VALUES
-                    (:nomeFile, :tipoFile, :creato, SYSDATE)
+                    (:nomeFile, :tipoFile, :creato, SYSDATE, :elaborazione)
                 """;
 
             await using var conn = await OpenAsync(ct);
@@ -221,6 +222,7 @@ namespace SeiPDFManagement.Repositories
             cmd.Parameters.Add(new OracleParameter("nomeFile", OracleDbType.Varchar2) { Value = nomeFile });
             cmd.Parameters.Add(new OracleParameter("tipoFile", OracleDbType.Varchar2) { Value = tipoFile });
             cmd.Parameters.Add(new OracleParameter("creato", OracleDbType.Int32) { Value = creato });
+            cmd.Parameters.Add(new OracleParameter("elaborazione", OracleDbType.Varchar2) { Value = elaborazione });
 
             await cmd.ExecuteNonQueryAsync(ct);
         }

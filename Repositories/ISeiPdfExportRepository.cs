@@ -109,6 +109,9 @@ namespace SeiPDFManagement.Repositories
         /// <param name="nomeFile">
         /// Nome fisico del file PDF creato.
         /// </param>
+        /// <param name="elaborazione">
+        /// Identificativo elaborazione del file.
+        /// </param>
         /// <param name="tipoFile">
         /// Tipo file (es. ".pdf").
         /// </param>
@@ -120,6 +123,7 @@ namespace SeiPDFManagement.Repositories
         /// </param>
         Task InsertH2HSeiPdfLogAsync(
             string nomeFile,
+            string elaborazione,
             string tipoFile,
             int creato,
             CancellationToken ct);
