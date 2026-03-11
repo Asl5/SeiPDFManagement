@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SeiPDFManagement.Authorization;
 using SeiPDFManagement.Data;
+using SeiPDFManagement.Filters;
 using SeiPDFManagement.Models;
 using SeiPDFManagement.Repositories;
 using SeiPDFManagement.Services;
@@ -10,6 +11,8 @@ using SeiPDFManagement.Services.SeiPdfExport;
 using SeiPDFManagement.Services.SeiPdfZip;
 using Serilog;
 using System.Reflection;
+//using Microsoft.OpenApi.Models;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +48,32 @@ builder.Services.AddSwaggerGen(c =>
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
+    // ===============================
+    // API KEY (HEADER) CONFIGURATION
+    // ===============================
+    //c.AddSecurityDefinition("ApiKey", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    //{
+    //    Description = "API Key richiesta per le chiamate schedulate.\nInserire il valore nell'header X-API-KEY.",
+    //    Name = "X-API-KEY",
+    //    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+    //    Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+    //    Scheme = "ApiKeyScheme"
+    //});
+
+    //c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    //{
+    //    {
+    //        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    //        {
+    //            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+    //            {
+    //                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+    //                Id = "ApiKey"
+    //            }
+    //        },
+    //        Array.Empty<string>()
+    //    }
+    //});
 });
 
 
@@ -90,7 +119,10 @@ app.UseRouting();
 app.UseAuthentication(); // ← anche se ora non l’hai ancora messa, va qui
 app.UseAuthorization();
 
-app.UseWhen(
+//swagger protetto da autenticazione solo in produzione
+if (!app.Environment.IsDevelopment())
+{
+    app.UseWhen(
     ctx => ctx.Request.Path.StartsWithSegments("/swagger"),
     swaggerApp =>
     {
@@ -114,6 +146,7 @@ app.UseWhen(
             await next();
         });
     });
+}
 
 app.UseSwagger();
 

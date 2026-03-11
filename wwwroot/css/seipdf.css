@@ -1,0 +1,210 @@
+﻿/* =========================================================
+   SEIPDF – HOME LANDING
+   ========================================================= */
+
+body {
+    margin: 0;
+    background: #f1f3f8;
+    color: #0f172a;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.hero {
+    min-height: 100vh;
+    padding: 80px 30px;
+    background: linear-gradient(180deg, #edf2fa 0%, #ffffff 100%);
+    box-sizing: border-box;
+}
+
+.hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto 60px;
+}
+
+.brand-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.brand-sub {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.hero-content {
+    max-width: 900px;
+    margin: auto;
+    text-align: center;
+}
+
+.hero h1 {
+    font-size: 2.8rem;
+    margin-bottom: 24px;
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    color: #334155;
+}
+
+/* =========================================================
+   STATUS BADGE
+   ========================================================= */
+
+.status-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin: 40px 0;
+    flex-wrap: wrap;
+}
+
+.status-badge {
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-weight: 600;
+    background: #16a34a;
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+}
+
+.status-loading {
+    background: #9ca3af;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.hero-actions {
+    margin-top: 40px;
+}
+
+.btn {
+    padding: 14px 26px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    margin: 0 10px;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: #fff;
+}
+
+.btn-outline {
+    border: 2px solid #2563eb;
+    color: #2563eb;
+}
+
+/* =========================================================
+   SCROLL STORYTELLING
+   ========================================================= */
+
+.scroll-sections {
+    background: #f1f3f8;
+}
+
+.scroll-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 20px;
+}
+
+    .scroll-section.alt {
+        background: #ffffff;
+    }
+
+.scroll-inner {
+    max-width: 720px;
+    text-align: center;
+}
+
+    .scroll-inner h2 {
+        font-size: 2.4rem;
+        margin-bottom: 20px;
+    }
+
+    .scroll-inner p {
+        font-size: 1.2rem;
+        color: #334155;
+    }
+
+/* =========================================================
+   ANIMAZIONI
+   ========================================================= */
+
+.reveal {
+    opacity: 0;
+    transform: translateY(60px);
+    transition: all 0.8s ease;
+}
+
+    .reveal.from-left {
+        transform: translateX(-80px);
+    }
+
+    .reveal.from-right {
+        transform: translateX(80px);
+    }
+
+    .reveal.visible {
+        opacity: 1;
+        transform: translate(0, 0);
+    }
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.footer-dark {
+    background: #020617;
+    color: #9ca3af;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+
+/* =========================================================
+   DARK MODE – FIX DEFINITIVO
+   ========================================================= */
+
+body.dark {
+    background: #020617;
+    color: #e5e7eb;
+}
+
+    body.dark .hero {
+        background: linear-gradient(180deg, #0b1220 0%, #020617 100%);
+    }
+
+    body.dark .subtitle {
+        color: #cbd5e1;
+    }
+
+    body.dark .scroll-sections {
+        background: #020617;
+    }
+
+    body.dark .scroll-section.alt {
+        background: #020617;
+    }
+
+    body.dark .scroll-inner p {
+        color: #cbd5e1;
+    }
+
+    body.dark .btn-outline {
+        border-color: #93c5fd;
+        color: #93c5fd;
+    }

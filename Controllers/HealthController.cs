@@ -93,6 +93,26 @@ namespace SeiPDFManagement.Controllers
                 _config["LogDirectory"]);
 
             // -----------------------------
+            // SERVICE STATUS (badge UI)
+            // -----------------------------
+
+            result.PdfService =
+                result.Oracle == "OK" &&
+                result.Filesystem.GetValueOrDefault("ExportOutput") == "OK"
+                    ? "OK"
+                    : "ERROR";
+
+            result.ZipService =
+                result.Filesystem.GetValueOrDefault("ZipInput") == "OK"
+                    ? "OK"
+                    : "ERROR";
+
+            // Per ora MAIL = OK se app è viva
+            // In futuro potrai legarlo a IMAP / Graph
+            result.MailService = "OK";
+
+
+            // -----------------------------
             // FINAL STATUS
             // -----------------------------
             result.Status = result.Errors.Count == 0

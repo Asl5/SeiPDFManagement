@@ -1,4 +1,4 @@
-html {
+/*html {
   font-size: 14px;
 }
 
@@ -19,4 +19,22 @@ html {
 
 body {
   margin-bottom: 60px;
+}*/
+
+/* =========================================================
+   STILI BASE APPLICAZIONE (NO HOME)
+   ========================================================= */
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+    body.has-navbar {
+        padding-top: 70px;
+    }
+
+.footer {
+    padding: 20px 0;
+    background: #f8f9fa;
 }

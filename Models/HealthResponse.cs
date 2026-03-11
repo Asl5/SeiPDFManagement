@@ -33,6 +33,11 @@
         /// </summary>
         public Dictionary<string, string> Filesystem { get; set; } = new();
 
+        // Stato funzionale (per badge UI)
+        public string PdfService { get; set; } = "UNKNOWN";
+        public string ZipService { get; set; } = "UNKNOWN";
+        public string MailService { get; set; } = "UNKNOWN";
+
         /// <summary>
         /// Elenco degli errori riscontrati durante il controllo.
         /// Vuoto se il servizio è Healthy.

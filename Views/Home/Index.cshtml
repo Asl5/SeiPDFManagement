@@ -1,8 +1,103 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "SeiPDF Management";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<link rel="stylesheet" href="~/css/seipdf.css" />
+
+<section class="hero">
+    <div class="hero-top">
+        <div class="brand">
+            <span class="brand-name">SeiPDF Management</span>
+            <span class="brand-sub">Document Workflow Platform</span>
+        </div>
+
+        <button class="theme-toggle" id="themeToggle" title="Cambia tema">
+            🌙
+        </button>
+    </div>
+
+    <div class="hero-content">
+        <h1>Gestione centralizzata del ciclo SEIPDF</h1>
+
+        <p class="subtitle">
+            Automazione, tracciabilità e controllo dell’intero processo di
+            produzione, invio e ricezione documentale.
+        </p>
+
+        <div class="status-wrapper">
+            <div class="status-badge status-loading" id="pdfStatus">PDF: verifica…</div>
+            <div class="status-badge status-loading" id="zipStatus">ZIP: verifica…</div>
+            <div class="status-badge status-loading" id="mailStatus">MAIL: verifica…</div>
+        </div>
+
+        <div class="hero-actions">
+            <a href="/swagger" class="btn btn-primary">Documentazione API</a>
+            <a href="/health" class="btn btn-outline">Stato del sistema</a>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================
+     SCROLL STORYTELLING
+     ========================================================= -->
+
+<section class="scroll-sections">
+
+    <div class="scroll-section reveal from-right">
+        <div class="scroll-inner">
+            <h2>Generazione documenti</h2>
+            <p>
+                Estrazione e produzione automatica di documenti PDF
+                da basi dati Oracle, con logging applicativo,
+                tracciamento completo e audit.
+            </p>
+        </div>
+    </div>
+
+    <div class="scroll-section reveal from-left alt">
+        <div class="scroll-inner">
+            <h2>Preparazione invii</h2>
+            <p>
+                Creazione di pacchetti ZIP conformi ai vincoli
+                dimensionali (15 MB, max 250 PDF),
+                con gestione lotti e file di controllo.
+            </p>
+        </div>
+    </div>
+
+    <div class="scroll-section reveal from-right">
+        <div class="scroll-inner">
+            <h2>Gestione esiti</h2>
+            <p>
+                Lettura automatizzata delle risposte email,
+                parsing degli esiti, aggiornamento stati
+                e storicizzazione completa.
+            </p>
+        </div>
+    </div>
+
+</section>
+
+<section class="flow">
+    <h2>Come funziona</h2>
+    <ol>
+        <li>Estrazione PDF dal database</li>
+        <li>Creazione ZIP conformi</li>
+        <li>Invio ai sistemi esterni</li>
+        <li>Ricezione esiti</li>
+        <li>Aggiornamento automatico stati</li>
+    </ol>
+</section>
+
+<footer class="footer footer-dark">
+    <p>
+        SeiPDF Management – ASL5<br />
+        Server: <strong>@Environment.MachineName</strong>
+    </p>
+</footer>
+
+@section Scripts {
+    <script src="~/js/seipdf-theme.js"></script>
+    <script src="~/js/seipdf-status.js"></script>
+    <script src="~/js/seipdf-scroll.js"></script>
+}

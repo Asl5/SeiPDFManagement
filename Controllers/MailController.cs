@@ -32,10 +32,6 @@ namespace SeiPDFManagement.Controllers
         /// Sicurezza:
         /// - opzionale API Key tramite header `X-API-KEY`
         /// </remarks>
-        /// <param name="apiKey">
-        /// Chiave API opzionale per l'accesso.
-        /// Deve essere passata nell'header HTTP `X-API-KEY`.
-        /// </param>
         /// <returns>
         /// Esito dell'operazione con elenco dei file elaborati.
         /// </returns>
@@ -46,18 +42,18 @@ namespace SeiPDFManagement.Controllers
         [ProducesResponseType(typeof(DownloadUnreadResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> DownloadUnreadAttachments([FromHeader(Name = "X-API-KEY")] string? apiKey = null)
+        public async Task<IActionResult> DownloadUnreadAttachments()
         {
             try
             {
                 _context.ControllerName = ControllerContext.ActionDescriptor.ControllerName;
                 // --- (Facoltativo) Controllo semplice di sicurezza con chiave API ---
-                var requiredKey = _config["Security:ApiKey"];
-                if (!string.IsNullOrEmpty(requiredKey) && apiKey != requiredKey)
-                {
-                    _logger.LogWarning("Accesso non autorizzato: chiave API mancante o errata");
-                    return Unauthorized(new { Error = "Chiave API non valida o mancante" });
-                }
+                //var requiredKey = _config["Security:ApiKey"];
+                //if (!string.IsNullOrEmpty(requiredKey) && apiKey != requiredKey)
+                //{
+                //    _logger.LogWarning("Accesso non autorizzato: chiave API mancante o errata");
+                //    return Unauthorized(new { Error = "Chiave API non valida o mancante" });
+                //}
 
                 _logger.LogInformation("Richiesta ricevuta per DownloadUnreadAttachments da {Ip}", HttpContext.Connection.RemoteIpAddress);
 

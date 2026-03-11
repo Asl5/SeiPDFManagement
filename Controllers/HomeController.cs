@@ -4,16 +4,25 @@ using SeiPDFManagement.Models;
 
 namespace SeiPDFManagement.Controllers
 {
-    public class HomeController : Controller
+    /// <summary>
+    /// Controller della pagina principale dell'applicazione.
+    /// </summary>
+    public class HomeController(ILogger<HomeController> logger) : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly ILogger<HomeController> _logger = logger;
 
-        public HomeController(ILogger<HomeController> logger)
+        /// <summary>
+        /// Pagina di presentazione di SeiPDF Management.
+        /// </summary>
+        public IActionResult Index()
         {
-            _logger = logger;
+            return View();
         }
 
-        public IActionResult Index()
+        /// <summary>
+        /// Pagina mostrata in caso di accesso non autorizzato.
+        /// </summary>
+        public IActionResult AccessoNegato()
         {
             return View();
         }
