@@ -50,7 +50,7 @@ flowchart LR
     FTP["FTP Sender (Java)"]
 
     FTPS["FTPS Postel"]
-    MAIL"[Mail Server"]
+    MAIL["Mail Server"]
 
     DB --> API
     API --> FS
