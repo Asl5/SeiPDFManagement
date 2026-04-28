@@ -46,11 +46,11 @@ flowchart LR
     DB[(Oracle Database)]
     FS[(Filesystem)]
 
-    API[SeiPDF API (.NET)]
-    FTP[FTP Sender (Java)]
+    API["SeiPDF API (.NET)"]
+    FTP["FTP Sender (Java)"]
 
-    FTPS[FTPS Postel]
-    MAIL[Mail Server]
+    FTPS["FTPS Postel"]
+    MAIL"[Mail Server"]
 
     DB --> API
     API --> FS
@@ -190,7 +190,7 @@ grype sbom:sbom.json
 ```
 ---
 
-##🚀 Deploy
+## 🚀 Deploy
 
 ### Requisiti
 
@@ -203,7 +203,8 @@ grype sbom:sbom.json
 
 ---
 
-###Esecuzione 
+### 
+Esecuzione 
 
 - API .NET deployata su IIS
 - servizio FTP deployato su Tomcat
