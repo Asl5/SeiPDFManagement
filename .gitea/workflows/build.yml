@@ -1,0 +1,211 @@
+name: SeiPDFManagement - Build, Security and IIS Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '**'
+    paths-ignore:
+      - 'docs/**'
+  pull_request:
+    branches:
+      - V1.1
+
+jobs:
+  build-and-deploy:
+    runs-on: windows
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore, build e publish .NET 8
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          dotnet --version
+          dotnet restore .\SeiPDFManagement.csproj
+          if ($LASTEXITCODE -ne 0) { throw 'dotnet restore fallito' }
+          dotnet build .\SeiPDFManagement.csproj -c Release --no-restore
+          if ($LASTEXITCODE -ne 0) { throw 'dotnet build fallito' }
+          dotnet publish .\SeiPDFManagement.csproj -c Release --no-build -o .\_publish
+          if ($LASTEXITCODE -ne 0) { throw 'dotnet publish fallito' }
+          if (-not (Test-Path .\_publish\SeiPDFManagement.dll)) { throw 'DLL mancante nel publish' }
+          if (-not (Test-Path .\_publish\web.config)) { throw 'web.config generato da publish mancante' }
+          if (-not (Test-Path .\_publish\appsettings.json)) { throw 'appsettings.json non incluso: verificare il repository' }
+          if (Test-Path .\_publish\appsettings.Development.json) { throw 'Configurazione Development inclusa nel publish' }
+
+      - name: Genera SBOM CycloneDX 1.5 da dipendenze NuGet
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path .\_reports | Out-Null
+          dotnet list .\SeiPDFManagement.csproj package --include-transitive --format json | Out-File .\_reports\nuget-packages.json -Encoding utf8
+          if ($LASTEXITCODE -ne 0) { throw 'Inventario NuGet fallito' }
+          $inventory = Get-Content .\_reports\nuget-packages.json -Raw | ConvertFrom-Json
+          $items = @()
+          foreach ($project in @($inventory.projects)) {
+            foreach ($framework in @($project.frameworks)) {
+              foreach ($pkg in @($framework.topLevelPackages) + @($framework.transitivePackages)) {
+                if ($null -eq $pkg -or -not $pkg.id) { continue }
+                $version = if ($pkg.resolvedVersion) { [string]$pkg.resolvedVersion } else { [string]$pkg.requestedVersion }
+                $items += [ordered]@{
+                  type = 'library'; name = [string]$pkg.id; version = $version
+                  'bom-ref' = ('pkg:nuget/{0}@{1}' -f $pkg.id, $version)
+                  purl = ('pkg:nuget/{0}@{1}' -f $pkg.id, $version)
+                }
+              }
+            }
+          }
+          $items = @($items | Sort-Object name, version -Unique)
+          if ($items.Count -eq 0) { throw 'SBOM vuoto: controllare inventario NuGet' }
+          $bom = [ordered]@{
+            bomFormat = 'CycloneDX'; specVersion = '1.5'; version = 1
+            metadata = [ordered]@{
+              timestamp = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+              component = [ordered]@{ type = 'application'; name = 'SeiPDFManagement' }
+            }
+            components = $items
+          }
+          $bom | ConvertTo-Json -Depth 15 | Out-File .\_reports\sbom.cdx.json -Encoding utf8
+          Write-Host "SBOM generata: $($items.Count) pacchetti NuGet"
+
+      - name: OWASP Dependency-Check
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dc = 'D:\Tools\dependency-check\bin\dependency-check.bat'
+          if (-not (Test-Path $dc)) { throw "OWASP Dependency-Check non trovato: $dc" }
+          $data = 'D:\GiteaCache\dependency-check'
+          if (-not (Test-Path $data)) { throw "Cache OWASP non trovata: $data" }
+          & $dc --project 'SeiPDFManagement' --scan '.\SeiPDFManagement.csproj' --scan '.\obj\project.assets.json' --scan '.\_publish' --format HTML --format JSON --out '.\_reports' --data $data --noupdate --failOnCVSS 7
+          if ($LASTEXITCODE -ne 0) { throw "OWASP Dependency-Check fallito (exit code $LASTEXITCODE)" }
+
+      - name: Archivia artefatti sul runner
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $branch = if ($env:GITHUB_HEAD_REF) { $env:GITHUB_HEAD_REF } else { $env:GITHUB_REF_NAME }
+          if (-not $branch) { $branch = 'manual' }
+          $branch = $branch -replace '[^A-Za-z0-9_.-]', '_'
+          $commit = if ($env:GITHUB_SHA) { $env:GITHUB_SHA.Substring(0, [Math]::Min(8, $env:GITHUB_SHA.Length)) } else { 'unknown' }
+          $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+          $dest = Join-Path 'D:\GiteaArtifacts\SeiPDFManagement' (Join-Path $branch "$stamp-$commit")
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Copy-Item .\_reports -Destination (Join-Path $dest 'reports') -Recurse -Force
+          Compress-Archive -Path '.\_publish\*' -DestinationPath (Join-Path $dest 'publish.zip') -Force
+          Write-Host "Artefatti archiviati in $dest"
+
+      - name: Deploy IIS con backup e rollback
+        if: github.event_name == 'push' && github.ref == 'refs/heads/V1.1'
+        shell: powershell
+        env:
+          IIS_USER: ${{ secrets.IIS_USER }}
+          IIS_PASSWORD: ${{ secrets.IIS_PASSWORD }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $share = '\\pvesbasl5\e$'
+          $target = Join-Path $share 'SEIPDF\App\SeiPdfManagement'
+          $backupDir = Join-Path $share 'SEIPDF\Backup\SeiPdfManagement'
+          $health = 'http://pvesbasl5:8089/health'
+          $publish = (Resolve-Path '.\_publish').Path
+          $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+          $backup = Join-Path $backupDir "SeiPdfManagement-$stamp.zip"
+          $offline = Join-Path $target 'app_offline.htm'
+          $staging = Join-Path $env:RUNNER_TEMP "seipdf-stage-$stamp"
+          $snapshot = Join-Path $env:RUNNER_TEMP "seipdf-snapshot-$stamp"
+          $drive = 'Z:'
+          $hadExisting = $false
+          $offlineSet = $false
+          $deployStarted = $false
+          $deploySucceeded = $false
+          $rollbackSucceeded = $false
+
+          function Sync-Directory([string]$source, [string]$destination) {
+            & robocopy $source $destination /MIR /R:3 /W:2 /NFL /NDL /NP
+            if ($LASTEXITCODE -ge 8) { throw "Robocopy fallito: $LASTEXITCODE" }
+          }
+          function Assert-Health {
+            for ($i = 1; $i -le 12; $i++) {
+              try {
+                $r = Invoke-RestMethod -Uri $health -Method Get -TimeoutSec 15
+                if ($r.status -eq 'Healthy' -and $r.oracle -eq 'OK' -and
+                    $r.pdfService -eq 'OK' -and $r.zipService -eq 'OK' -and
+                    $r.mailService -eq 'OK' -and @($r.errors).Count -eq 0 -and
+                    $r.filesystem.ExportOutput -eq 'OK' -and
+                    $r.filesystem.ZipInput -eq 'OK' -and $r.filesystem.Logs -eq 'OK') {
+                  Write-Host 'Health check completo OK'
+                  return
+                }
+                Write-Warning "Health non pronto: $($r | ConvertTo-Json -Compress -Depth 5)"
+              } catch { Write-Warning "Health check tentativo $i fallito: $($_.Exception.Message)" }
+              Start-Sleep -Seconds 5
+            }
+            throw 'Health check non superato'
+          }
+
+          try {
+            if ([string]::IsNullOrWhiteSpace($env:IIS_USER) -or [string]::IsNullOrWhiteSpace($env:IIS_PASSWORD)) {
+              throw 'Secret IIS_USER/IIS_PASSWORD mancanti'
+            }
+            # Evita connessioni SMB persistenti e conflitti di credenziali.
+            & net.exe use $drive $share "/user:$env:IIS_USER" $env:IIS_PASSWORD '/persistent:no' | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw 'Connessione SMB al server IIS fallita' }
+            $target = Join-Path $drive 'SEIPDF\App\SeiPdfManagement'
+            $backupDir = Join-Path $drive 'SEIPDF\Backup\SeiPdfManagement'
+            $offline = Join-Path $target 'app_offline.htm'
+            if (-not (Test-Path $target)) { throw "Directory di produzione inesistente: $target" }
+            New-Item -ItemType Directory -Force -Path $backupDir, $staging, $snapshot | Out-Null
+
+            # Snapshot locale prima di qualsiasi modifica: ripristinabile anche con file di configurazione.
+            Sync-Directory $target $snapshot
+            $hadExisting = $true
+            if (-not (Get-ChildItem $snapshot -Force | Select-Object -First 1)) { throw 'Snapshot di produzione vuoto' }
+            Compress-Archive -Path (Join-Path $snapshot '*') -DestinationPath $backup -Force
+            $backupHash = (Get-FileHash $backup -Algorithm SHA256).Hash
+            Write-Host "Backup: $backup (SHA256 $backupHash)"
+
+            Sync-Directory $publish $staging
+            # Variabili configurate nell'Application Pool: web.config generato da dotnet publish.
+            # Se invece sono nel web.config di produzione, adeguare questa fase prima del deploy.
+            Set-Content -Path (Join-Path $staging 'app_offline.htm') -Value '<html><body>Maintenance</body></html>' -Encoding ASCII
+            $deployStarted = $true
+            Set-Content -Path $offline -Value '<html><body>Maintenance</body></html>' -Encoding ASCII
+            $offlineSet = $true
+            Start-Sleep -Seconds 3
+            Sync-Directory $staging $target
+            $expected = (Get-FileHash (Join-Path $staging 'SeiPDFManagement.dll') -Algorithm SHA256).Hash
+            $actual = (Get-FileHash (Join-Path $target 'SeiPDFManagement.dll') -Algorithm SHA256).Hash
+            if ($expected -ne $actual) { throw 'SHA256 DLL non corrispondente' }
+            Remove-Item $offline -Force
+            $offlineSet = $false
+            Assert-Health
+            $deploySucceeded = $true
+            Write-Host 'Deployment completato'
+          }
+          catch {
+            Write-Error "Deployment fallito: $($_.Exception.Message)" -ErrorAction Continue
+            if ($deployStarted -and $hadExisting) {
+              try {
+                # Rimette offline l'applicazione durante il ripristino.
+                Set-Content -Path $offline -Value '<html><body>Rollback</body></html>' -Encoding ASCII
+                $offlineSet = $true
+                Start-Sleep -Seconds 3
+                Sync-Directory $snapshot $target
+                if (Test-Path $offline) { Remove-Item $offline -Force }
+                $offlineSet = $false
+                Assert-Health
+                $rollbackSucceeded = $true
+                Write-Host 'Rollback completato e verificato'
+              } catch { Write-Error "Rollback fallito: $($_.Exception.Message)" -ErrorAction Continue }
+            }
+            throw 'Deployment non riuscito: verificare i log e lo stato del rollback'
+          }
+          finally {
+            if ($offlineSet -and (Test-Path $offline)) {
+              # In caso di rollback fallito, lascia offline per non esporre un deployment incoerente.
+              Write-Warning 'Applicazione lasciata offline: intervento manuale necessario'
+            }
+            if (Test-Path $staging) { Remove-Item $staging -Recurse -Force -ErrorAction SilentlyContinue }
+            if (Test-Path $snapshot) { Remove-Item $snapshot -Recurse -Force -ErrorAction SilentlyContinue }
+            & net.exe use $drive '/delete' '/y' | Out-Null
+          }
