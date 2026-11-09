@@ -114,21 +114,11 @@ jobs:
 
           $branch = $env:GITHUB_REF_NAME
 
-          if ($branch -eq 'V1.1') {
               $appPath = 'SEIPDF\App\SeiPdfManagement'
               $backupPath = 'SEIPDF\Backup\SeiPdfManagement'
               $health = 'http://pvesbasl5:8089/health'
               $environment = 'PRODUZIONE'
-          }
-          elseif ($branch -eq 'feature/gitea-ci-cd') {
-              $appPath = 'SEIPDF\App\SeiPdfManagement-Test'
-              $backupPath = 'SEIPDF\Backup\SeiPdfManagement-Test'
-              $health = 'http://pvesbasl5:8090/health'
-              $environment = 'TEST'
-          }
-          else {
-              throw "Branch non autorizzato al deployment: $branch"
-          }
+
 
           Write-Host "Ambiente: $environment"
           Write-Host "Branch: $branch"
