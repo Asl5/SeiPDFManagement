@@ -240,31 +240,48 @@ jobs:
               New-Item -ItemType Directory -Force `
                   -Path $backupDir, $staging, $snapshot | Out-Null
 
-              # ======================================
-              # BACKUP
-              # ======================================
 
-              Write-Host 'Creazione snapshot...'
+                # ======================================
+                # BACKUP
+                # ======================================
 
-              Sync-Directory $target $snapshot
+                Write-Host 'Verifica installazione esistente...'
 
-              if (-not (Get-ChildItem $snapshot -Force | Select-Object -First 1)) {
-                  throw 'Snapshot vuoto'
-              }
+                $existingFiles = @(
+                    Get-ChildItem -Path $target -Force |
+                    Where-Object { $_.Name -ne 'app_offline.htm' }
+                )
 
-              $hadExisting = $true
+                if ($existingFiles.Count -gt 0) {
 
-              $backup = Join-Path $backupDir "SeiPdfManagement-$stamp.zip"
+                    Write-Host 'Installazione esistente: creazione backup...'
 
-              Compress-Archive `
-                  -Path (Join-Path $snapshot '*') `
-                  -DestinationPath $backup `
-                  -Force
+                    Sync-Directory $target $snapshot
 
-              $backupHash = (Get-FileHash $backup -Algorithm SHA256).Hash
+                    $hadExisting = $true
 
-              Write-Host "Backup creato: $backup"
-              Write-Host "SHA256 backup: $backupHash"
+                    $backup = Join-Path $backupDir "SeiPdfManagement-$stamp.zip"
+
+                    Compress-Archive `
+                        -Path (Join-Path $snapshot '*') `
+                        -DestinationPath $backup `
+                        -Force
+
+                    $backupHash = (Get-FileHash $backup -Algorithm SHA256).Hash
+
+                    Write-Host "Backup creato: $backup"
+                    Write-Host "SHA256 backup: $backupHash"
+
+                }
+                else {
+
+                    Write-Host 'Prima installazione rilevata.'
+                    Write-Host 'Backup non necessario: directory applicativa vuota.'
+
+                    $hadExisting = $false
+
+                }
+
 
               # ======================================
               # PREPARAZIONE STAGING
