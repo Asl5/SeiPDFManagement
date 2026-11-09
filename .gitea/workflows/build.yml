@@ -5,8 +5,6 @@ on:
   push:
     branches:
       - '**'
-    paths-ignore:
-      - 'docs/**'
   pull_request:
     branches:
       - V1.1
@@ -17,7 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+        with:
+          fetch-depth: 0
       - name: Restore, build e publish .NET 8
         shell: powershell
         run: |
@@ -95,12 +94,51 @@ jobs:
           Compress-Archive -Path '.\_publish\*' -DestinationPath (Join-Path $dest 'publish.zip') -Force
           Write-Host "Artefatti archiviati in $dest"
 
+      - name: Verifica modifiche applicative
+        id: changes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/V1.1'
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $before = '${{ github.event.before }}'
+          $current = '${{ github.sha }}'
+
+          if (-not $before -or $before -match '^0+$') {
+              "deploy=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+              exit 0
+          }
+
+          git fetch --no-tags origin $before
+          if ($LASTEXITCODE -ne 0) {
+              throw 'Impossibile recuperare il commit precedente'
+          }
+
+          $files = @(git diff --name-only $before $current)
+          if ($LASTEXITCODE -ne 0) {
+              throw 'Impossibile determinare i file modificati'
+          }
+
+          $appFiles = @(
+              $files | Where-Object {
+                  $_ -notmatch '^Documentazione/'
+              }
+          )
+
+          if ($appFiles.Count -eq 0) {
+              Write-Host 'Solo modifiche in Documentazione: deploy escluso'
+              "deploy=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          }
+          else {
+              Write-Host 'Modifiche applicative rilevate: deploy autorizzato'
+              "deploy=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          }
       
       - name: Deploy IIS con backup e rollback
         if: >-
           github.event_name == 'push' &&
-          (github.ref == 'refs/heads/V1.1' ||
-           github.ref == 'refs/heads/feature/gitea-ci-cd')
+          github.ref == 'refs/heads/V1.1' &&
+          steps.changes.outputs.deploy == 'true'
         shell: powershell
         env:
           IIS_USER: ${{ secrets.IIS_USER }}
